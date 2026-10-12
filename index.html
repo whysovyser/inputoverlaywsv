@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>OBS Input Overlay by whysovyser</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@700;800&display=swap');
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: transparent;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      padding: 20px;
+      color: #fff;
+    }
+
+    .overlay-container {
+      display: flex;
+      gap: 16px;
+      padding: 14px;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      border-radius: 14px;
+      background: transparent;
+      backdrop-filter: blur(4px);
+    }
+
+    .keyboard {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .kb-row {
+      display: flex;
+      gap: 5px;
+    }
+
+    .key {
+      width: 38px;
+      height: 38px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: #a1a1aa;
+      transition: background 0.05s, color 0.05s, box-shadow 0.05s, border-color 0.05s;
+    }
+
+    .key.w-esc   { width: 38px; font-size: 10px; opacity: 0; pointer-events: none; }
+    .key.w-tab   { width: 56px; font-size: 10px; }
+    .key.w-caps  { width: 66px; font-size: 10px; }
+    .key.w-shift { width: 66px; font-size: 10px; }
+    .key.w-ctrl  { width: 63px; font-size: 10px; }
+    .key.w-alt   { width: 63px; font-size: 10px; }
+    .key.w-space { width: 196px; font-size: 10px; }
+
+    .key.active {
+      background: #22c55e !important;
+      color: #000000 !important;
+      border-color: #4ade80 !important;
+      box-shadow: 0 0 14px rgba(34, 197, 94, 0.9);
+    }
+
+    .mouse-block {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 167px;
+    }
+
+    .mouse-buttons {
+      display: flex;
+      gap: 6px;
+    }
+
+    .mouse-btn {
+      height: 38px;
+      flex: 1;
+      font-size: 11px;
+      font-weight: 800;
+      width: auto;
+    }
+
+    .wheel-wrapper {
+      flex: 1;
+      height: 38px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 2px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 6px;
+      transition: background 0.05s, color 0.05s, box-shadow 0.05s;
+    }
+
+    .wheel-wrapper.active {
+      background: #22c55e;
+      color: #000;
+      border-color: #4ade80;
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.8);
+    }
+
+    .wheel-wrapper.active .scroll-half {
+      color: #000;
+      border-color: rgba(0, 0, 0, 0.3);
+      background: transparent;
+    }
+
+    .scroll-half {
+      height: 15px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      color: #71717a;
+    }
+
+    .scroll-half.active {
+      background: #16a34a;
+      color: #fff;
+      box-shadow: 0 0 6px #22c55e;
+    }
+
+    .mouse-pad {
+      width: 236px;
+      height: 123px;
+      border: 1.5px solid rgba(255, 255, 255, 0.2);
+      background: rgba(0, 0, 0, 0.5);
+      border-radius: 8px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .watermark {
+      position: absolute;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: rgba(255, 255, 255, 0.06);
+      user-select: none;
+      pointer-events: none;
+    }
+
+    .trail {
+      width: 5px;
+      height: 5px;
+      background: rgba(34, 197, 94, 0.6);
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+      box-shadow: 0 0 6px #22c55e;
+      transition: opacity 0.3s linear;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      background: #22c55e;
+      border-radius: 50%;
+      position: absolute;
+      transform: translate(-50%, -50%);
+      box-shadow: 0 0 10px #22c55e;
+      top: 50%;
+      left: 50%;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="overlay-container">
+    <div class="keyboard">
+      <div class="kb-row">
+        <div class="key w-esc" data-key="esc">ESC</div>
+        <div class="key" data-key="1">1</div>
+        <div class="key" data-key="2">2</div>
+        <div class="key" data-key="3">3</div>
+        <div class="key" data-key="4">4</div>
+        <div class="key" data-key="5">5</div>
+        <div class="key" data-key="6">6</div>
+      </div>
+      <div class="kb-row">
+        <div class="key w-tab" data-key="tab">TAB</div>
+        <div class="key" data-key="q">Q</div>
+        <div class="key" data-key="w">W</div>
+        <div class="key" data-key="e">E</div>
+        <div class="key" data-key="r">R</div>
+        <div class="key" data-key="t">T</div>
+        <div class="key" data-key="y">Y</div>
+      </div>
+      <div class="kb-row">
+        <div class="key w-shift" data-key="shift">SHIFT</div>
+        <div class="key" data-key="a">A</div>
+        <div class="key" data-key="s">S</div>
+        <div class="key" data-key="d">D</div>
+        <div class="key" data-key="f">F</div>
+        <div class="key" data-key="g">G</div>
+        <div class="key" data-key="h">H</div>
+      </div>
+      <div class="kb-row">
+        <div class="key w-ctrl" data-key="ctrl">CTRL</div>
+        <div class="key w-alt" data-key="alt">ALT</div>
+        <div class="key w-space" data-key="space">SPACE</div>
+      </div>
+    </div>
+
+    <div class="mouse-block">
+      <div class="mouse-buttons">
+        <div class="key mouse-btn" data-mouse="M1">M1</div>
+        <div class="wheel-wrapper" id="wheelBlock" data-mouse="M3">
+          <div class="scroll-half" id="scrollUp">▲</div>
+          <div class="scroll-half" id="scrollDown">▼</div>
+        </div>
+        <div class="key mouse-btn" data-mouse="M2">M2</div>
+      </div>
+      <div class="mouse-pad" id="mousePad">
+        <div class="watermark">WHYSOVYSER</div>
+        <div class="dot" id="aimDot"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const ws = new WebSocket("ws://localhost:8765");
+    const mousePad = document.getElementById('mousePad');
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+
+      document.querySelectorAll(".key[data-key]").forEach(el => {
+        const k = el.getAttribute("data-key");
+        let isActive = false;
+
+        if (k === 'ctrl') {
+          isActive = data.keys['ctrl'] || data.keys['ctrl_l'] || data.keys['ctrl_r'];
+        } else if (k === 'shift') {
+          isActive = data.keys['shift'] || data.keys['shift_l'] || data.keys['shift_r'];
+        } else if (k === 'alt') {
+          isActive = data.keys['alt'] || data.keys['alt_l'] || data.keys['alt_r'];
+        } else {
+          isActive = data.keys[k] || data.keys[k.toUpperCase()];
+        }
+
+        el.classList.toggle('active', !!isActive);
+      });
+
+      document.querySelectorAll(".key[data-mouse]").forEach(el => {
+        const m = el.getAttribute("data-mouse");
+        if (data.mouse.buttons && data.mouse.buttons[m]) {
+          el.classList.add('active');
+        } else {
+          el.classList.remove('active');
+        }
+      });
+
+      const wheelBlock = document.getElementById('wheelBlock');
+      if (data.mouse.buttons && data.mouse.buttons.M3) {
+        wheelBlock.classList.add('active');
+      } else {
+        wheelBlock.classList.remove('active');
+      }
+
+      document.getElementById('scrollUp').classList.toggle('active', data.mouse.scrollUp);
+      document.getElementById('scrollDown').classList.toggle('active', data.mouse.scrollDown);
+
+      // Питон присылает готовые честные проценты (0-100)
+      const dot = document.getElementById('aimDot');
+      let xPercent = Math.min(Math.max(data.mouse.x, 3), 97);
+      let yPercent = Math.min(Math.max(data.mouse.y, 3), 97);
+
+      dot.style.left = xPercent + '%';
+      dot.style.top = yPercent + '%';
+
+      const trail = document.createElement('div');
+      trail.className = 'trail';
+      trail.style.left = xPercent + '%';
+      trail.style.top = yPercent + '%';
+      mousePad.appendChild(trail);
+
+      setTimeout(() => {
+        trail.style.opacity = '0';
+        setTimeout(() => trail.remove(), 300);
+      }, 50);
+    };
+  </script>
+</body>
+</html>
